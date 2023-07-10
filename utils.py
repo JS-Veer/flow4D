@@ -248,6 +248,7 @@ def interpolate_profiles(aligned_planes, fxdpts, intp_options):
         vel_interp.append(I(fxdpts))
 
     # create new polydatas
+    #Test with alpha value if extra point connections (extra areas) appear at the edge of the inflow profiles
     interp_planes = [pv.PolyData(fxdpts).delaunay_2d(alpha=0.1) for _ in range(num_frames)]
     for k in range(num_frames):
         interp_planes[k]['Velocity'] = vel_interp[k]
