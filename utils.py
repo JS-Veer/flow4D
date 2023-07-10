@@ -224,8 +224,9 @@ def interpolate_profiles(aligned_planes, fxdpts, intp_options):
     #edge_pts = [aligned_planes[k].extract_feature_edges(boundary_edges=True, feature_edges=False, manifold_edges=False).points for k in range(num_frames)]
     dist2edge = [distance.cdist(aligned_planes[k].points, edge_pts[k]).min(axis=1) for k in range(num_frames)]
     boundary_ids = [np.where(dist2edge[k] < (dr * dist2edge[k].max()))[0] for k in range(num_frames)]
-    for k in range(num_frames):
-        aligned_planes[k]['Velocity'][boundary_ids[k], :] = 0.0
+    #------------------------------
+    #for k in range(num_frames):
+    #    aligned_planes[k]['Velocity'][boundary_ids[k], :] = 0.0
 
     # Set backflow to zero
     if intp_options['zero_backflow']:
@@ -247,16 +248,21 @@ def interpolate_profiles(aligned_planes, fxdpts, intp_options):
 
         vel_interp.append(I(fxdpts))
 
-    # hard no slip condition (double check)
-    if intp_options['hard_noslip']:
-        for k in range(num_frames):
-            vel_interp[k][boundary_ids, :] = 0
-
     # create new polydatas
-    interp_planes = [pv.PolyData(fxdpts).delaunay_2d(alpha=0.1) for _ in range(num_frames)]
+    interp_planes = [pv.PolyData(fxdpts).delaunay_2d(alpha=0.0003) for _ in range(num_frames)]
     for k in range(num_frames):
         interp_planes[k]['Velocity'] = vel_interp[k]
 
+    #New hard no slip condition
+#------------------------------------------------------------
+    if intp_options['hard_noslip']:
+        edge_pts = [interp_planes[k].extract_feature_edges(boundary_edges=True, feature_edges=False, manifold_edges=False).points for k in range(num_frames)]
+        dist2edge = [distance.cdist(interp_planes[k].points, edge_pts[k]).min(axis=1) for k in range(num_frames)]
+        boundary_ids = [np.where(dist2edge[k] < (dr * dist2edge[k].max()))[0] for k in range(num_frames)]
+        for k in range(num_frames):
+            interp_planes[k]['Velocity'][boundary_ids[k], :] = 0.0
+    
+#------------------------------------------------------------
     return interp_planes
 
 
